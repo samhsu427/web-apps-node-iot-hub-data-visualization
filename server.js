@@ -54,8 +54,17 @@ const eventHubReader = new EventHubReader(iotHubConnectionString, eventHubConsum
       const payload = {
         IotData: message,
         MessageDate: date || Date.now().toISOString(),
-        DeviceId: deviceId,
+        ServiceId: null,
+        DeviceId: null,
+        Value: null
       };
+
+      let body = new Buffer.from(payload.IotData.body, 'base64');
+      let parsed = JSON.parse(body.toString());
+      payload.ServiceId = parsed.readings[0].device;
+      payload.DeviceId = parsed.readings[0].name;
+      payload.Value = parsed.readings[0].value;
+      console.log('Azure device: %s - [EdgeX service: %s, device: %s, value: %s]', deviceId, payload.ServiceId, payload.DeviceId, payload.Value);
 
       wss.broadcast(JSON.stringify(payload));
     } catch (err) {
